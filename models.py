@@ -5,6 +5,8 @@ class Garage(Base):
     __tablename__ = "garages"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
+    location = Column(String)
+    total_capacity = Column(Integer)
     # Add other garage fields here
 
 class Floor(Base):
@@ -20,4 +22,5 @@ class Spot(Base):
     spot_number = Column(String)
     floor_id = Column(Integer, ForeignKey("floors.id"))
     is_available = Column(Integer) # Using Integer to represent boolean for simplicity
+    type = Column(String, default="Regular") # Compact, Regular, Handicapped
     # Add other spot fields here 

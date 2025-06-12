@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from sqlalchemy import text
 from database import engine, Base
 from api.v1.endpoints import parking
+from api.v1.endpoints import garage
 import models  # Ensures models are registered with SQLAlchemy
 
 app = FastAPI(
@@ -11,6 +12,7 @@ app = FastAPI(
 )
 
 app.include_router(parking.router, prefix="/api/v1", tags=["Parking"])
+app.include_router(garage.router, prefix="/api/v1", tags=["Garage"])
 
 @app.on_event("startup")
 def startup_event():
