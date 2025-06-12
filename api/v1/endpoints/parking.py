@@ -1,18 +1,16 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-import schemas
-import crud
 import database
+import ai_parking_recommendation
+from ..schemas import ParkingRequest, ParkingRecommendation
 
 router = APIRouter()
 
-@router.post("/parking/recommendation", response_model=schemas.ParkingRecommendation)
-def get_parking_recommendation(request: schemas.ParkingRequest, db: Session = Depends(database.get_db)):
-    """
-    Provides a parking recommendation based on user's working location and preferred entrance.
-    """
-    return crud.get_parking_recommendation_from_db(
-        db=db,
-        working_location=request.user_working_location,
-        preferred_entrance=request.user_preferred_entrance,
-    ) 
+@router.post("/parking/recommendation", response_model=ParkingRecommendation)
+def recommend_parking(
+    request: ParkingRequest, db: Session = Depends(database.get_db)
+):
+    recommendation = ai_parking_recommendation.get_ai_optimized_parking_recommendation(
+        db, request.user_working_location, request.user_preferred_entrance
+    )
+    return recommendation 

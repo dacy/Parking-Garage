@@ -1,82 +1,121 @@
-# Parking Recommendation API
+# Parking Garage Management System
 
-This project is a FastAPI-based application that provides parking recommendations based on a user's work location and preferred entrance. It is designed to be a starting point for a more complex parking guidance system.
+A FastAPI-based parking garage management system that uses AI to provide optimized parking recommendations.
 
 ## Features
 
--   **FastAPI Backend**: A modern, fast (high-performance) web framework for building APIs with Python.
--   **Automatic API Documentation**: Interactive API documentation (Swagger UI) is automatically generated.
--   **In-Memory Database**: Uses an in-memory SQLite database for easy setup and testing, managed with SQLAlchemy.
--   **Structured Project**: The project is split into modules for better organization and maintainability.
--   **Database Initialization**: Supports loading an `init.sql` file on startup to create tables and populate initial data.
+- Real-time parking spot tracking
+- AI-powered parking recommendations
+- Building and garage management
+- Multiple entrance support
+- Zone and floor-based organization
+- Historical parking data tracking
 
-## Tech Stack
+## API Endpoints
 
--   [FastAPI](https://fastapi.tiangolo.com/): The web framework.
--   [Uvicorn](https://www.uvicorn.org/): The ASGI server to run the application.
--   [Pydantic](https://pydantic-docs.helpmanual.io/): For data validation and settings management.
--   [SQLAlchemy](https://www.sqlalchemy.org/): For database interaction (ORM).
+### Parking Recommendations
 
-## Prerequisites
+#### Get Parking Recommendation
+```http
+POST /api/v1/parking/recommendation
+```
 
--   Python 3.8+
--   `pip` for package installation
+Request Body:
+```json
+{
+    "user_working_location": "Building A",
+    "user_preferred_entrance": "Hwy 121"
+}
+```
 
-## Installation
+Response:
+```json
+{
+    "user_preferred_entrance": "Hwy 121",
+    "user_working_location": "Building A",
+    "recommended_garage_and_floor": "Garage C, Floor 3",
+    "availability_floor_percent": 85,
+    "availability_garage_percent": 70
+}
+```
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <your-repository-url>
-    cd <repository-directory>
-    ```
+### Garage Information
 
-2.  **Install the dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+#### Get All Garages
+```http
+GET /api/v1/garages
+```
 
-## Running the Application
+#### Get Garage by ID
+```http
+GET /api/v1/garages/{garage_id}
+```
 
-To start the API server, run the following command in the root directory of the project:
+## Data Models
 
+### Buildings
+- Building A
+- Building B
+- Building C
+- Building F
+
+### Entrances
+- Leadership Dr
+- Hwy 121
+- Headquarters Dr
+- Communication Pkwy
+
+## Setup
+
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Run the application:
 ```bash
 uvicorn main:app --reload
 ```
 
-The server will start, and the API will be accessible at `http://127.0.0.1:8000`. The `--reload` flag makes the server restart automatically after code changes.
+3. Access the API documentation:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
-## API Documentation (Swagger UI)
+## Database Schema
 
-Once the application is running, you can access the interactive API documentation in your browser at:
+The system uses SQLite with the following main tables:
+- garages
+- floor
+- zone
+- spot
+- buildings
+- building_to_garage
+- entrance
+- entrance_to_garage
+- spot_change
 
-[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+## AI Integration
 
-This interface allows you to see all the available endpoints, their request/response models, and test them directly.
+The parking recommendation system uses AI to:
+- Analyze current parking availability
+- Consider user preferences
+- Calculate optimal parking spots
+- Provide real-time recommendations
 
-The main endpoint is:
-- `POST /api/v1/parking/recommendation`
+## Development
 
-## Project Structure
-
-The project follows a structured layout to separate concerns:
-
+The project structure follows FastAPI best practices:
 ```
 .
 ├── api/
 │   └── v1/
-│       └── endpoints/
-│           └── parking.py      # API endpoint for parking
-├── crud.py                     # Database Create, Read, Update, Delete functions
-├── database.py                 # Database connection and session setup
-├── main.py                     # Main application entry point
-├── models.py                   # SQLAlchemy database models (tables)
-├── requirements.txt            # Project dependencies
-├── schemas.py                  # Pydantic models (API data shapes)
-└── init.sql                    # (Optional) SQL script for DB initialization
-```
-
-## Database
-
-The application uses an in-memory SQLite database, which is created and destroyed on every application run.
-
-To initialize the database with your own tables and data, create an `init.sql` file in the root directory. This file will be automatically executed when the application starts. 
+│       ├── endpoints/
+│       │   ├── parking.py
+│       │   └── garage.py
+│       └── schemas/
+│           ├── parking.py
+│           └── garage.py
+├── models.py
+├── main.py
+└── requirements.txt
+``` 

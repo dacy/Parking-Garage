@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 import database
 import models
-import schemas
+from ..schemas import Garage, GarageSummary, Level, Zone, SpotTypeAvailability
 
 router = APIRouter()
 
-@router.get("/garages", response_model=list[schemas.GarageSummary])
+@router.get("/garages", response_model=list[GarageSummary])
 def get_garages(db: Session = Depends(database.get_db)):
     garages = db.query(models.Garage).all()
     result = []
@@ -20,10 +20,10 @@ def get_garages(db: Session = Depends(database.get_db)):
         percentage = (available_spots / total_spots * 100) if total_spots > 0 else 0
         
         # Create the response object
-        garage_data = schemas.GarageSummary(
-            id=garage.garage_id,
-            name=garage.garage_name,
-            total_capacity=garage.capacity,
+        garage_data = GarageSummary(
+            id=garage.id,
+            name=garage.name,
+            total_capacity=garage.total_spaces,
             available_spots=available_spots,
             percentage=percentage
         )
@@ -31,9 +31,9 @@ def get_garages(db: Session = Depends(database.get_db)):
     
     return result
 
-@router.get("/garages/{garage_id}", response_model=schemas.Garage)
-def get_garage_detail(garage_id: str, db: Session = Depends(database.get_db)):
-    garage = db.query(models.Garage).filter(models.Garage.garage_id == garage_id).first()
+@router.get("/garages/{garage_id}", response_model=Garage)
+def get_garage(garage_id: int, db: Session = Depends(database.get_db)):
+    garage = db.query(models.Garage).filter(models.Garage.id == garage_id).first()
     if not garage:
         raise HTTPException(status_code=404, detail="Garage not found")
 
@@ -65,20 +65,20 @@ def get_garage_detail(garage_id: str, db: Session = Depends(database.get_db)):
         zone_list = []
         for zone_id, zone_data in zones.items():
             spot_types = [
-                schemas.SpotTypeAvailability(
+                SpotTypeAvailability(
                     type="Regular",  # You might want to map restriction_type to actual types
                     available=zone_data["available"]
                 )
             ]
             zone_list.append(
-                schemas.Zone(
+                Zone(
                     name=zone_data["name"],
                     spot_types=spot_types
                 )
             )
         
         level_list.append(
-            schemas.Level(
+            Level(
                 id=floor.floor_id,
                 level=floor.floor_name,
                 available_spaces=len(available_spots),
@@ -88,10 +88,10 @@ def get_garage_detail(garage_id: str, db: Session = Depends(database.get_db)):
         )
     
     percentage = (total_available / total_spots * 100) if total_spots else 0
-    return schemas.Garage(
-        id=garage.garage_id,
-        name=garage.garage_name,
-        total_capacity=garage.capacity,
+    return Garage(
+        id=garage.id,
+        name=garage.name,
+        total_capacity=garage.total_spaces,
         available_spots=total_available,
         percentage=percentage,
         levels=level_list
