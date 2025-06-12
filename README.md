@@ -30,13 +30,7 @@ This project is a FastAPI-based application that provides parking recommendation
     cd <repository-directory>
     ```
 
-2.  **Create a virtual environment (recommended):**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-    ```
-
-3.  **Install the dependencies:**
+2.  **Install the dependencies:**
     ```bash
     pip install -r requirements.txt
     ```

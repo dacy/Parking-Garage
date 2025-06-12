@@ -37,16 +37,15 @@ class Zone(BaseModel):
     spot_types: List[SpotTypeAvailability]
 
 class Level(BaseModel):
-    id: int
-    level: int
+    id: str
+    level: str
     available_spaces: int
     percentage: float
     zones: List[Zone]
 
 class Garage(BaseModel):
-    id: int
+    id: str
     name: str
-    location: str
     total_capacity: int
     available_spots: int = 0
     percentage: float = 0
@@ -56,11 +55,11 @@ class Garage(BaseModel):
         from_attributes = True
 
 class GarageSummary(BaseModel):
-    id: int
+    id: str
     name: str
-    location: str
     total_capacity: int
     available_spots: int = 0
     percentage: float = 0
+    
     class Config:
         from_attributes = True 

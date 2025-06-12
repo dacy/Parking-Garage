@@ -1,9 +1,9 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# In-memory SQLite database URL
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+# File-based SQLite database URL
+SQLALCHEMY_DATABASE_URL = "sqlite:///./parking.db"
 
 # SQLAlchemy engine
 engine = create_engine(

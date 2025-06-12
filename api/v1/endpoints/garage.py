@@ -13,18 +13,17 @@ def get_garages(db: Session = Depends(database.get_db)):
     
     for garage in garages:
         # Calculate available spots
-        available_spots = 0
-        total_spots = 0
+        available_spots = sum(1 for spot in garage.spots if not spot.is_occupied)
+        total_spots = len(garage.spots)
         
         # Calculate percentage
         percentage = (available_spots / total_spots * 100) if total_spots > 0 else 0
         
-        # Create the response object with available_spots (no levels)
+        # Create the response object
         garage_data = schemas.GarageSummary(
-            id=garage.id,
-            name=garage.name,
-            location=garage.location,
-            total_capacity=garage.total_capacity,
+            id=garage.garage_id,
+            name=garage.garage_name,
+            total_capacity=garage.capacity,
             available_spots=available_spots,
             percentage=percentage
         )
@@ -33,52 +32,66 @@ def get_garages(db: Session = Depends(database.get_db)):
     return result
 
 @router.get("/garages/{garage_id}", response_model=schemas.Garage)
-def get_garage_detail(garage_id: int, db: Session = Depends(database.get_db)):
-    garage = db.query(models.Garage).filter(models.Garage.id == garage_id).first()
+def get_garage_detail(garage_id: str, db: Session = Depends(database.get_db)):
+    garage = db.query(models.Garage).filter(models.Garage.garage_id == garage_id).first()
     if not garage:
         raise HTTPException(status_code=404, detail="Garage not found")
 
-    # Get all levels (floors) for this garage
-    floors = db.query(models.Floor).filter(models.Floor.garage_id == garage_id).all()
+    # Get all floors for this garage
+    floors = garage.floors
     level_list = []
-    total_spots = 0
-    total_available = 0
+    total_spots = len(garage.spots)
+    total_available = sum(1 for spot in garage.spots if not spot.is_occupied)
+    
     for floor in floors:
-        spots = db.query(models.Spot).filter(models.Spot.floor_id == floor.id).all()
-        available_spots = [s for s in spots if s.is_available]
-        total_spots += len(spots)
-        total_available += len(available_spots)
-        # For now, treat each floor as a single zone named 'Zone 1'
-        type_counts = {"Compact": 0, "Regular": 0, "Handicapped": 0}
-        type_available = {"Compact": 0, "Regular": 0, "Handicapped": 0}
-        for s in spots:
-            spot_type = getattr(s, "type", "Regular")
-            if spot_type not in type_counts:
-                type_counts[spot_type] = 0
-                type_available[spot_type] = 0
-            type_counts[spot_type] += 1
-            if s.is_available:
-                type_available[spot_type] += 1
-        spot_types = [
-            schemas.SpotTypeAvailability(type=spot_type, available=type_available[spot_type])
-            for spot_type in type_counts
-        ]
-        zones = [schemas.Zone(name="Zone 1", spot_types=spot_types)]
+        spots = floor.spots
+        available_spots = [s for s in spots if not s.is_occupied]
+        
+        # Group spots by zone
+        zones = {}
+        for spot in spots:
+            zone = spot.zone
+            if zone.zone_id not in zones:
+                zones[zone.zone_id] = {
+                    "name": zone.zone_name,
+                    "spots": [],
+                    "available": 0
+                }
+            zones[zone.zone_id]["spots"].append(spot)
+            if not spot.is_occupied:
+                zones[zone.zone_id]["available"] += 1
+        
+        # Convert zones to schema format
+        zone_list = []
+        for zone_id, zone_data in zones.items():
+            spot_types = [
+                schemas.SpotTypeAvailability(
+                    type="Regular",  # You might want to map restriction_type to actual types
+                    available=zone_data["available"]
+                )
+            ]
+            zone_list.append(
+                schemas.Zone(
+                    name=zone_data["name"],
+                    spot_types=spot_types
+                )
+            )
+        
         level_list.append(
             schemas.Level(
-                id=floor.id,
-                level=floor.level,
+                id=floor.floor_id,
+                level=floor.floor_name,
                 available_spaces=len(available_spots),
                 percentage=(len(available_spots) / len(spots) * 100) if spots else 0,
-                zones=zones
+                zones=zone_list
             )
         )
+    
     percentage = (total_available / total_spots * 100) if total_spots else 0
     return schemas.Garage(
-        id=garage.id,
-        name=garage.name,
-        location=garage.location,
-        total_capacity=garage.total_capacity,
+        id=garage.garage_id,
+        name=garage.garage_name,
+        total_capacity=garage.capacity,
         available_spots=total_available,
         percentage=percentage,
         levels=level_list
