@@ -158,6 +158,8 @@ def get_ai_optimized_parking_recommendation(
         recommended_garage_id=1,  # This would come from LLM
         recommended_floor="Floor 1",  # This would come from LLM
         recommended_floor_id="F1_1",  # This would come from LLM
+        recommended_zone="Zone 1",  # This would come from LLM
+        recommended_zone_id="Z1_1_1",  # This would come from LLM
         availability_floor_percent=85,  # This would come from LLM
         availability_garage_percent=70   # This would come from LLM
     ) 

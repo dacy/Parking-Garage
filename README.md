@@ -37,6 +37,8 @@ Response:
     "recommended_garage_id": 3,
     "recommended_floor": "Floor 3",
     "recommended_floor_id": "F3_3",
+    "recommended_zone": "Zone A",
+    "recommended_zone_id": "Z3_3_A",
     "availability_floor_percent": 85,
     "availability_garage_percent": 70
 }
