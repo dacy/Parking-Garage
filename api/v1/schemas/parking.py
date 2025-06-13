@@ -21,7 +21,8 @@ class ParkingRequest(BaseModel):
 class ParkingRecommendation(BaseModel):
     user_preferred_entrance: Entrance
     user_working_location: Building
-    recommended_garage_and_floor: str = Field(..., example="Garage C, Floor 3")
+    recommended_garage: str = Field(..., example="Garage C")
+    recommended_floor: str = Field(..., example="Floor 3")
     availability_floor_percent: int = Field(..., example=85)
     availability_garage_percent: int = Field(..., example=70)
 

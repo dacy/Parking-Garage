@@ -87,9 +87,9 @@ if __name__ == "__main__":
     try:
         while True:
             # You can change num_updates to control how many spots are changed each cycle.
-            run_simulation(num_updates=20)
+            run_simulation(num_updates=40)
             # Wait for 5 seconds before the next cycle.
-            print("\nNext update in 5 seconds... (Press Ctrl+C to stop)")
-            time.sleep(5)
+            print("\nNext update in 3 seconds... (Press Ctrl+C to stop)")
+            time.sleep(3)
     except KeyboardInterrupt:
         print("\nSimulation stopped by user.") 
