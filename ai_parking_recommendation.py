@@ -68,33 +68,58 @@ Available Garages:
 """
     
     for garage in garages:
-        prompt += f"\n{garage.name} (Total Spaces: {garage.total_spaces}, Available: {garage.available_spaces})"
-        
-        # Add building distances
+        # --- Garage-level calculation ---
+        all_spots_in_garage = [spot for floor in floors[garage.id] for zone in zones[floor.floor_id] for spot in spots[zone.zone_id]]
+        total_spots_garage = len(all_spots_in_garage)
+        available_spots_garage = sum(1 for s in all_spots_in_garage if not s.is_occupied)
+        garage_percentage = round((available_spots_garage / total_spots_garage * 100), 2) if total_spots_garage > 0 else 0
+        prompt += f"\n{garage.name} ({garage_percentage}% Available - {available_spots_garage}/{total_spots_garage} Total)"
+
         building_distances = [btg for btg in building_to_garages if btg.garage_id == garage.id]
         if building_distances:
             prompt += f"\n  Distance to {user_working_location.value}: {building_distances[0].distance} miles"
         
-        # Add entrance distances
         entrance_distances = [etg for etg in entrance_to_garages if etg.garage_id == garage.id]
         if entrance_distances:
             prompt += f"\n  Distance to {user_preferred_entrance.value}: {entrance_distances[0].distance} miles"
         
-        # Add floor information
+        # --- Floor-level loop ---
         for floor in floors[garage.id]:
-            prompt += f"\n  {floor.floor_name} (Capacity: {floor.capacity})"
+            all_spots_in_floor = [spot for zone in zones[floor.floor_id] for spot in spots[zone.zone_id]]
+            total_spots_floor = len(all_spots_in_floor)
+            available_spots_floor = sum(1 for s in all_spots_in_floor if not s.is_occupied)
+            floor_percentage = round((available_spots_floor / total_spots_floor * 100), 2) if total_spots_floor > 0 else 0
+            prompt += f"\n  {floor.floor_name} ({floor_percentage}% Available)"
             
-            # Add zone information
+            # --- Zone-level loop ---
             for zone in zones[floor.floor_id]:
-                prompt += f"\n    {zone.zone_name} (Capacity: {zone.capacity})"
+                spots_in_zone = spots[zone.zone_id]
+                total_spots_zone = len(spots_in_zone)
+                available_spots_zone = sum(1 for s in spots_in_zone if not s.is_occupied)
+                zone_percentage = round((available_spots_zone / total_spots_zone * 100), 2) if total_spots_zone > 0 else 0
+                prompt += f"\n    {zone.zone_name} ({zone_percentage}% Available)"
                 
-                # Add spot information
-                occupied_count = sum(1 for spot in spots[zone.zone_id] if spot.is_occupied)
-                restricted_count = sum(1 for spot in spots[zone.zone_id] if spot.restriction_type == 1)
-                prompt += f"\n      Spots: {len(spots[zone.zone_id])} (Occupied: {occupied_count}, Restricted: {restricted_count})"
+                # Group spots by restriction_type and occupancy
+                spot_counts = {0: {"total": 0, "occupied": 0}, 1: {"total": 0, "occupied": 0}, 2: {"total": 0, "occupied": 0}}
+                for spot in spots_in_zone:
+                    r_type = spot.restriction_type
+                    if r_type in spot_counts:
+                        spot_counts[r_type]["total"] += 1
+                        if spot.is_occupied:
+                            spot_counts[r_type]["occupied"] += 1
+
+                # Create a detailed spot breakdown string
+                spot_type_map = {0: "Regular", 1: "Compact", 2: "Handicap"}
+                breakdown_parts = []
+                for r_type, counts in spot_counts.items():
+                    if counts["total"] > 0:
+                        breakdown_parts.append(f"{spot_type_map.get(r_type)}: {counts['occupied']}/{counts['total']}")
+                
+                spot_breakdown_str = ", ".join(breakdown_parts)
+                prompt += f"\n      Spots: {spot_breakdown_str}"
                 
                 # Add historical changes
-                for spot in spots[zone.zone_id]:
+                for spot in spots_in_zone:
                     if hasattr(spot, 'historical_changes') and spot.historical_changes:
                         prompt += f"\n      Spot {spot.spot_id} History:"
                         for change in spot.historical_changes:

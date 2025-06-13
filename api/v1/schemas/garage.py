@@ -7,6 +7,8 @@ class SpotTypeAvailability(BaseModel):
 
 class Zone(BaseModel):
     name: str
+    available_spaces: int
+    percentage: float
     spot_types: List[SpotTypeAvailability]
 
 class Level(BaseModel):

@@ -17,7 +17,7 @@ def get_garages(db: Session = Depends(database.get_db)):
         total_spots = len(garage.spots)
         
         # Calculate percentage
-        percentage = (available_spots / total_spots * 100) if total_spots > 0 else 0
+        percentage = round((available_spots / total_spots * 100), 2) if total_spots > 0 else 0
         
         # Create the response object
         garage_data = GarageSummary(
@@ -44,50 +44,57 @@ def get_garage(garage_id: int, db: Session = Depends(database.get_db)):
     total_available = sum(1 for spot in garage.spots if not spot.is_occupied)
     
     for floor in floors:
-        spots = floor.spots
-        available_spots = [s for s in spots if not s.is_occupied]
-        
-        # Group spots by zone
-        zones = {}
-        for spot in spots:
-            zone = spot.zone
-            if zone.zone_id not in zones:
-                zones[zone.zone_id] = {
-                    "name": zone.zone_name,
-                    "spots": [],
-                    "available": 0
-                }
-            zones[zone.zone_id]["spots"].append(spot)
-            if not spot.is_occupied:
-                zones[zone.zone_id]["available"] += 1
-        
-        # Convert zones to schema format
-        zone_list = []
-        for zone_id, zone_data in zones.items():
-            spot_types = [
+        # For each floor, process its zones to get detailed availability
+        processed_zones = []
+        for zone_model in floor.zones:
+            spots_in_zone = zone_model.spots
+            
+            # Calculate total available spots and percentage for this specific zone
+            total_spots_in_zone = len(spots_in_zone)
+            total_available_in_zone = sum(1 for s in spots_in_zone if not s.is_occupied)
+            zone_percentage = round((total_available_in_zone / total_spots_in_zone * 100), 2) if total_spots_in_zone > 0 else 0
+            
+            # Group available spots by their restriction type
+            available_by_type = {}
+            for spot in spots_in_zone:
+                if not spot.is_occupied:
+                    r_type = spot.restriction_type
+                    available_by_type[r_type] = available_by_type.get(r_type, 0) + 1
+            
+            # Map integer restriction types to human-readable names
+            spot_type_map = {0: "Regular", 1: "Compact", 2: "Handicap"}
+            spot_types_list = [
                 SpotTypeAvailability(
-                    type="Regular",  # You might want to map restriction_type to actual types
-                    available=zone_data["available"]
+                    type=spot_type_map.get(r_type, f"Unknown Type {r_type}"),
+                    available=count
                 )
+                for r_type, count in available_by_type.items()
             ]
-            zone_list.append(
-                Zone(
-                    name=zone_data["name"],
-                    spot_types=spot_types
-                )
+            
+            # Create the Zone object for the response
+            processed_zone = Zone(
+                name=zone_model.zone_name,
+                available_spaces=total_available_in_zone,
+                percentage=zone_percentage,
+                spot_types=spot_types_list
             )
+            processed_zones.append(processed_zone)
+
+        # Calculate floor-level statistics
+        total_spots_in_floor = len(floor.spots)
+        total_available_in_floor = sum(1 for s in floor.spots if not s.is_occupied)
         
         level_list.append(
             Level(
                 id=floor.floor_id,
                 level=floor.floor_name,
-                available_spaces=len(available_spots),
-                percentage=(len(available_spots) / len(spots) * 100) if spots else 0,
-                zones=zone_list
+                available_spaces=total_available_in_floor,
+                percentage=round((total_available_in_floor / total_spots_in_floor * 100), 2) if total_spots_in_floor else 0,
+                zones=processed_zones
             )
         )
     
-    percentage = (total_available / total_spots * 100) if total_spots else 0
+    percentage = round((total_available / total_spots * 100), 2) if total_spots else 0
     return Garage(
         id=garage.id,
         name=garage.name,
