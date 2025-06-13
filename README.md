@@ -34,7 +34,9 @@ Response:
     "user_preferred_entrance": "Hwy 121",
     "user_working_location": "Building A",
     "recommended_garage": "Garage C",
+    "recommended_garage_id": 3,
     "recommended_floor": "Floor 3",
+    "recommended_floor_id": "F3_3",
     "availability_floor_percent": 85,
     "availability_garage_percent": 70
 }
