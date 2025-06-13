@@ -81,6 +81,19 @@ uvicorn main:app --reload
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
 
+## Running the Simulation
+
+To see the parking availability change in real-time, you can run the simulation script. This script will continuously update the status of parking spots in the database.
+
+1.  Open a new terminal in the project root directory.
+2.  Run the following command:
+
+    ```bash
+    python update_spots.py
+    ```
+
+This will start the simulation. You can then use the API endpoints (e.g., `GET /api/v1/garages`) to observe the changes in parking availability. The simulation will run until you stop it with `Ctrl+C`.
+
 ## Database Schema
 
 The system uses SQLite with the following main tables:
